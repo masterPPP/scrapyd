@@ -235,19 +235,20 @@ class Spiders(resource.Resource):
                        % (spider, status['status'], status['timestamp'], status['next_time'])
             content += "<td><a href='/data/%s/'>data</a></td>" % spider
             content += "</tr>"
-        sub_form = "<form action='' method='post'><input type='submit'>start all</input></form>"
+        sub_form = "<form action='' method='post'><input type='submit' value='开启所有任务'></input></form>"
         html = "<table>"+content+"</table>"+sub_form
         return html
 
     def render_POST(self, txrequest):
         args = dict((k, v[0]) for k, v in txrequest.args.items())
         project = args.pop('project', 'careerTalk')
-        spiders = ['NJU', 'BIT', 'ECUST', 'RUC']
+        # spiders = ['NJU', 'BIT', 'ECUST', 'RUC']
+        spiders = get_spider_list(project)
 
         for spider in spiders:
-            job = self.scheduler.add_job(spider_crawl, 'interval', minutes=3, id=spider, args=[project, spider])
-            job.executor
-        # self.scheduler.add_job(test_job, 'interval', seconds=1)
+            job = self.scheduler.add_job(spider_crawl, 'interval', minutes=60,
+                                         id=spider, next_run_time=datetime.utcnow(), args=[project, spider])
+        return "<span>任务全部开启</span><a href='/'>返回</a>"
 
 
 def spider_crawl(project, spider):
@@ -260,4 +261,3 @@ def spider_crawl(project, spider):
     logging.info('start apscheduler_job: '+cmd)
     os.system(cmd)
 
-    return "<span>任务全部开启</span><a href='/'>返回</a>"
