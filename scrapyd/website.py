@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime as dt
 
 import socket
 
@@ -136,7 +136,7 @@ class Jobs(resource.Resource):
             s += "<tr>"
             for a in ['project', 'spider', 'job', 'pid']:
                 s += "<td>%s</td>" % getattr(p, a)
-            s += "<td>%s</td>" % (datetime.now() - p.start_time)
+            s += "<td>%s</td>" % (dt.datetime.now() - p.start_time)
             s += "<td><a href='/logs/%s/%s/%s.log'>Log</a></td>" % (p.project, p.spider, p.job)
             if self.local_items:
                 s += "<td><a href='/items/%s/%s/%s.jl'>Items</a></td>" % (p.project, p.spider, p.job)
@@ -245,9 +245,11 @@ class Spiders(resource.Resource):
         # spiders = ['NJU', 'BIT', 'ECUST', 'RUC']
         spiders = get_spider_list(project)
 
+        tstart = dt.datetime.utcnow()
         for spider in spiders:
-            job = self.scheduler.add_job(spider_crawl, 'interval', minutes=60,
-                                         id=spider, next_run_time=datetime.utcnow(), args=[project, spider])
+            job = self.scheduler.add_job(spider_crawl, 'interval', minutes=60, replace_existing=True,
+                                         id=spider, next_run_time=tstart, args=[project, spider])
+            tstart = tstart + dt.timedelta(seconds=5)
         return "<span>任务全部开启</span><a href='/'>返回</a>"
 
 
